@@ -1,0 +1,24 @@
+server:
+  port: 9051
+spring:
+  application:
+    name: SPRING-SERVICE
+  redis:
+    host: 127.0.0.1
+    password:
+    port: 6379
+    pool:
+      max-idle: 8
+      min-idle: 0
+      max-active: 8
+      max-wait: -1
+  datasource:
+    url: jdbc:mysql://192.168.1.44:3306/company?characterEncoding=UTF-8&useSSL=false
+    username: root
+    password: l6rqhek>p?.G
+    driver-class-name: com.mysql.jdbc.Driver
+    #druid连接池配置
+#mybatis的配置
+mybatis: 
+  mapper-locations: classpath:com/bo/spring/model/mapping/*.xml
+#  type-aliases-package: com.website.infoCentre.entity
