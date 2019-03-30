@@ -4,8 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,11 +31,12 @@ public class ShiroConfig {
 		map.put("/v1/*", "authc");
 		map.put("/v2/*", "anon");
 		map.put("/v3/*", "anon");
-		map.put("/**", "authc");
+		map.put("/**", "anon");
 		
 		
 		shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
 		shiroFilterFactoryBean.setLoginUrl("/unauth");
+		shiroFilterFactoryBean.setUnauthorizedUrl("/unauthorized");
 		
         return shiroFilterFactoryBean;
 	}
@@ -49,6 +52,8 @@ public class ShiroConfig {
 		//设置 realm
 		securityManger.setRealm(memberRealm());
 		
+		securityManger.setSessionManager(seesionManager());
+		
 		return securityManger;
 	}
 	
@@ -61,5 +66,17 @@ public class ShiroConfig {
 	@Bean
 	public MemberRealm memberRealm() {
 		return new MemberRealm();
+	}
+	
+	
+	@Bean
+	public SessionManager seesionManager() {
+		DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+		sessionManager.setDeleteInvalidSessions(true);// 删除过期的session
+		sessionManager.setGlobalSessionTimeout(1800 * 1000);// 设置全局session超时时间
+		sessionManager.setSessionValidationSchedulerEnabled(true);// 是否定时检查session、
+		sessionManager.setSessionIdCookieEnabled(true);
+ 
+		return sessionManager;
 	}
 }

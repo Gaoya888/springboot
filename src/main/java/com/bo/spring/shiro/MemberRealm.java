@@ -23,6 +23,8 @@ public class MemberRealm extends AuthorizingRealm {
 	@Resource
 	UserInfoService userInfoService;
 	
+	public static final String userType = "member";
+	
 	/**
 	  *    获取身份验证信息
      * Shiro中，最终是通过 Realm 来获取应用程序中的用户、角色及权限信息的。

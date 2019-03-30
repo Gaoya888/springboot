@@ -19,7 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bo.spring.model.entity.GameUsers;
 import com.bo.spring.model.mapper.GameUsersMapper;
+import com.bo.spring.shiro.MemberRealm;
 import com.bo.spring.utils.RequestUtils;
+import com.bo.spring.websocket.MyWebSocketHandler;
+import com.bo.spring.websocket.WebsocketMsg;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -30,6 +33,9 @@ public class UserIndexController extends AbstractController {
 
 	@Resource
 	private GameUsersMapper usersMapper;
+	
+	@Resource
+	private MyWebSocketHandler myWebSocketHandler;
 	
 	@ApiOperation("用户信息")
 	@GetMapping("v1/user")
@@ -61,7 +67,7 @@ public class UserIndexController extends AbstractController {
 		Map<String, Object> resultMap = new HashMap<String, Object>();
 		
 		Subject subject = SecurityUtils.getSubject();
-		UsernamePasswordToken token = new UsernamePasswordToken("test555","a123456","member");
+		UsernamePasswordToken token = new UsernamePasswordToken("test555","a123456", MemberRealm.userType);
 		try {
 			subject.login(token);
 		} catch (Exception e) {
@@ -90,6 +96,7 @@ public class UserIndexController extends AbstractController {
 	}
 	
 	@GetMapping("v3/t2")
+	@RequiresAuthentication
 	public Map<String, Object> t2(){
 		log.info("t2 Controller");
 		Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -104,6 +111,27 @@ public class UserIndexController extends AbstractController {
 	    map.put("code", "1000000");
 	    map.put("msg", "未登录");
 	    return map;
+	}
+	
+	
+	@GetMapping(value = "/unauthorized")
+	@ResponseBody
+	public Object unauthorized() {
+	    Map<String, Object> map = new HashMap<String, Object>();
+	    map.put("code", "1000001");
+	    map.put("msg", "未登录");
+	    return map;
+	}
+	
+	@GetMapping(value = "/sendSocketMsg")
+	public Object sendSocketMsg() {
+		Map<String, Object> map = new HashMap<String, Object>();
+		WebsocketMsg msg = new WebsocketMsg();
+		msg.setContent("我是来自北方的狼");
+		msg.setMethod("info");
+		
+		myWebSocketHandler.sendMessageToUsers(msg);
+		return map;
 	}
 	 
 }

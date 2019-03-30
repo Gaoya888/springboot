@@ -4,6 +4,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,7 +23,7 @@ public class SpringInit {
 		log.info("*****初始化完成*****");
 	}
 	
-	//@Scheduled(cron = "0 */1 * * * ?") // 每1分钟,进行更新一次
+	@Scheduled(cron = "0 */1 * * * ?") // 每1分钟,进行更新一次
 	//@Scheduled(fixedRate = 6000)
 	public void initScheduledCMD() {
 		log.info("*****更新6*****");
