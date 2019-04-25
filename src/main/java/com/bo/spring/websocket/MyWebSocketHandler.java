@@ -3,6 +3,8 @@ package com.bo.spring.websocket;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -21,12 +23,12 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Component
 public class MyWebSocketHandler implements WebSocketHandler {
 
 	private static final Map<String, WebSocketSession> STAFFSESSIONS = new ConcurrentHashMap<>();
-
+	private static ExecutorService fixedThreadPool = Executors.newFixedThreadPool(10);
 	//@Resource
 	//private ShiroSessionDAO sessionDAO;
 
@@ -44,11 +46,12 @@ public class MyWebSocketHandler implements WebSocketHandler {
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 		String name = session.getAttributes().get(HandShakeInterceptor.SESSIONKEY).toString();
+		String requestID = session.getAttributes().get(HandShakeInterceptor.REQUESTID).toString();
 		//Session shiroSession = sessionDAO.doReadSession(sessionId);
 		//log.info("websocket连接------------------------------>shiroSession:{}", shiroSession.getId());
 		//log.info("websocket连接------------------------------>:员工");
 		log.info("websocket连接------------------------------>:员工:"+name);
-		STAFFSESSIONS.put(name, session);
+		STAFFSESSIONS.put(requestID, session);
 	}
 
 	/**
@@ -85,15 +88,25 @@ public class MyWebSocketHandler implements WebSocketHandler {
 	 */
 	public void sendMessageToUsers(WebsocketMsg msg) {
 		log.info("发送消息-------------------------------->{}", JSON.toJSON(msg));
-		for (WebSocketSession session : STAFFSESSIONS.values()) {
-			if (session.isOpen()) {
-				try {
-					session.sendMessage(new TextMessage(JSONObject.toJSONBytes(msg)));
-				} catch (IOException e) {
-					log.error("websocket发送给所有会员信息错误:{}", session.getId());
-				}
-			}
-		}
+		
+		Runnable t = new Runnable() {
+            @Override
+            public void run() {
+            	for (WebSocketSession session : STAFFSESSIONS.values()) {
+            		synchronized (session) {
+		    			if (session.isOpen()) {
+		    				try {
+		    					session.sendMessage(new TextMessage(JSONObject.toJSONBytes(msg)));
+		    				} catch (IOException e) {
+		    					log.error("websocket发送给所有会员信息错误:{}", session.getId());
+		    				}
+		    			}
+            		}
+            	}
+            }
+        };
+        
+        fixedThreadPool.submit(t);
 	}
 
 	/**

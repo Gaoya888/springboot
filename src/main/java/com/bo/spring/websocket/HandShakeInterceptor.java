@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class HandShakeInterceptor extends HttpSessionHandshakeInterceptor  {
 
 	protected static final String SESSIONKEY = "SHIROID";
+	protected static final String REQUESTID = "REQUESTID";
 
 	@Override
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
@@ -24,10 +25,11 @@ public class HandShakeInterceptor extends HttpSessionHandshakeInterceptor  {
 		log.info("Handle before webSocket connected. ");
 		if (request instanceof ServletServerHttpRequest) {
 			ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-			String token = servletRequest.getServletRequest().getParameter("name");
+			String name = servletRequest.getServletRequest().getParameter("name");
 			log.info("Validation passed. WebSocket connecting.... ");
-			if (!StringUtils.isEmpty(token)) {
-				attributes.put(SESSIONKEY, token);
+			if (!StringUtils.isEmpty(name)) {
+				attributes.put(SESSIONKEY, name);
+				attributes.put(REQUESTID, System.currentTimeMillis());
 				return true;
 			}
 		}
